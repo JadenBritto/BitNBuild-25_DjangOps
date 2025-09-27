@@ -1,26 +1,25 @@
 # ml/ml_module.py
 """
-Review Radar - ML module
+Review Radar - ML Module
 Provides:
- - load_model() automatically (local checkpoint fallback -> HF pretrained)
- - analyze_reviews(reviews, ...) -> rich JSON
+ - load_pipeline() that prefers local fine-tuned checkpoint (./reviewradar-final),
+   falls back to HF pretrained if missing
+ - analyze_reviews(reviews, ...) -> rich JSON (sentiment, aspects, keywords, recommendations)
  - compare_reviews(reviews_a, reviews_b) -> comparative JSON
- - export_to_csv(result, path)
+ - export_to_csv(result, out_path) -> CSV export of per-review analysis
 """
 
-import os
-os.environ.setdefault("WANDB_DISABLED", "true")
-
+import os, re, math, csv, json
 from typing import List, Dict, Any
+
+import torch
 from transformers import pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-import re, math, csv, json
 
-# -------- Config --------
-MODEL_DIR = "./reviewradar-final"   # backend: place fine-tuned model here if available
+# ---------------- Config ----------------
+MODEL_DIR = "./reviewradar-final"
 FALLBACK_MODEL = "distilbert-base-uncased-finetuned-sst-2-english"
 
-# Aspect keywords (extendable)
 ASPECT_KEYWORDS = {
     "battery": ["battery", "charge", "charging", "power", "duration"],
     "screen": ["screen", "display", "glass", "touch", "resolution", "crack", "cracked"],
@@ -29,19 +28,30 @@ ASPECT_KEYWORDS = {
     "delivery": ["delivery", "packaging", "shipping", "arrived", "late"]
 }
 
-# -------- Model load (fallback) --------
+# ---------------- Load pipeline ----------------
 def load_pipeline(model_path: str = MODEL_DIR):
+    device = 0 if torch.cuda.is_available() else -1
     try:
-        p = pipeline("sentiment-analysis", model=model_path, tokenizer=model_path, device=-1)
-        print("Loaded local fine-tuned model from", model_path)
-    except Exception:
-        p = pipeline("sentiment-analysis", model=FALLBACK_MODEL, device=-1)
-        print("Using pretrained sentiment model:", FALLBACK_MODEL)
+        p = pipeline("sentiment-analysis", model=model_path, tokenizer=model_path, device=device)
+        print(f"Loaded local fine-tuned model from {model_path} (device={device})")
+    except Exception as e:
+        print("Failed to load local model:", e)
+        print("Falling back to HF pretrained:", FALLBACK_MODEL)
+        p = pipeline("sentiment-analysis", model=FALLBACK_MODEL, device=device)
     return p
 
 clf = load_pipeline()
 
-# -------- Helpers --------
+# Normalize labels (LABEL_0/1 -> NEGATIVE/POSITIVE)
+def normalize_label(hf_label: str) -> str:
+    lab = hf_label.upper()
+    if lab.startswith("LABEL_0"):
+        return "NEGATIVE"
+    if lab.startswith("LABEL_1"):
+        return "POSITIVE"
+    return lab
+
+# ---------------- Helpers ----------------
 def top_keywords(reviews: List[str], k: int = 6) -> List[str]:
     if not reviews:
         return []
@@ -57,10 +67,8 @@ def map_aspects(reviews: List[str]) -> Dict[str,int]:
     for r in reviews:
         t = r.lower()
         for a, kws in ASPECT_KEYWORDS.items():
-            for kw in kws:
-                if kw in t:
-                    counts[a] += 1
-                    break
+            if any(kw in t for kw in kws):
+                counts[a] += 1
     return counts
 
 def extractive_summary(reviews: List[str], n_sentences: int = 3) -> str:
@@ -76,14 +84,12 @@ def extractive_summary(reviews: List[str], n_sentences: int = 3) -> str:
     word_score = dict(zip(vocab, word_counts))
     def sentence_score(s):
         tokens = re.findall(r'\w+', s.lower())
-        if not tokens: 
-            return 0.0
+        if not tokens: return 0.0
         return sum(word_score.get(t,0) for t in tokens) / math.sqrt(len(tokens))
     scored = [(sentence_score(s), s) for s in sentences]
     best = sorted(scored, key=lambda x: x[0], reverse=True)[:n_sentences]
     return " ".join(s for _, s in best)
 
-# Lightweight heuristic AI-score (fast, CPU safe)
 def heuristic_ai_score(text: str) -> float:
     s = 0.0
     tokens = text.split()
@@ -93,63 +99,56 @@ def heuristic_ai_score(text: str) -> float:
     if text.count("!") > 3: s += 0.1
     return min(1.0, s)
 
-# -------- Main analysis function --------
+# ---------------- Main analysis ----------------
 def analyze_reviews(reviews: List[str],
                     n_keywords: int = 6,
                     summary_sentences: int = 3,
                     flag_threshold: float = 0.8) -> Dict[str,Any]:
-    # sanitize
     clean = [r.strip() for r in reviews if r and r.strip()]
     if not clean:
         return {"error":"no reviews provided", "meta": {"n_reviews": 0}}
 
-    # sentiment (batched)
     results = clf(clean)
-    labels = [r["label"] for r in results]
+    labels = [normalize_label(r["label"]) for r in results]
     scores = [float(r.get("score", 0.0)) for r in results]
 
-    # ai score + flags
     ai_scores = [heuristic_ai_score(r) for r in clean]
     flags = [s >= flag_threshold for s in ai_scores]
 
-    # per-review structure
     per_review = [
-        {"text": text, "label": lab, "score": scr, "ai_score": ai, "flag": fl}
-        for text, lab, scr, ai, fl in zip(clean, labels, scores, ai_scores, flags)
+        {"text": t, "label": l, "score": s, "ai_score": ai, "flag": f}
+        for t,l,s,ai,f in zip(clean, labels, scores, ai_scores, flags)
     ]
 
-    # keywords / aspects
     top_kw = top_keywords(clean, k=n_keywords)
-    pos_reviews = [t for t,l in zip(clean,labels) if l.upper().startswith("POS")]
-    neg_reviews = [t for t,l in zip(clean,labels) if l.upper().startswith("NEG")]
+    pos_reviews = [t for t,l in zip(clean,labels) if l=="POSITIVE"]
+    neg_reviews = [t for t,l in zip(clean,labels) if l=="NEGATIVE"]
     pos_kw = top_keywords(pos_reviews, k=n_keywords) if pos_reviews else []
     neg_kw = top_keywords(neg_reviews, k=n_keywords) if neg_reviews else []
 
     aspects_counts = map_aspects(clean)
     aspect_stats = {}
     for asp, mentions in aspects_counts.items():
-        pos = sum(1 for t,l in zip(clean, labels) if asp in t.lower() and l.upper().startswith("POS"))
-        neg = sum(1 for t,l in zip(clean, labels) if asp in t.lower() and l.upper().startswith("NEG"))
+        pos = sum(1 for t,l in zip(clean, labels) if asp in t.lower() and l=="POSITIVE")
+        neg = sum(1 for t,l in zip(clean, labels) if asp in t.lower() and l=="NEGATIVE")
         pos_pct = round(pos / mentions, 3) if mentions>0 else 0.0
         neg_pct = round(neg / mentions, 3) if mentions>0 else 0.0
-        aspect_stats[asp] = {"mentions": mentions, "pos": pos, "neg": neg, "pos_pct": pos_pct, "neg_pct": neg_pct}
+        aspect_stats[asp] = {"mentions": mentions, "pos": pos, "neg": neg,
+                             "pos_pct": pos_pct, "neg_pct": neg_pct}
 
-    # recommendations (template rules)
     recommendations = []
     for asp, stats in aspect_stats.items():
         if stats["mentions"] >= 5 and stats["neg_pct"] >= 0.35:
             recommendations.append({
                 "aspect": asp,
                 "reason": f"neg_pct={stats['neg_pct']}",
-                "action": f"High negative mentions for {asp}. Investigate supply/packaging or add clearer product notes/warranty."
+                "action": f"High negative mentions for {asp}. Investigate and improve."
             })
 
-    # summaries: all + excluding flagged
     summary_all = extractive_summary(clean, n_sentences=summary_sentences)
     unflagged = [t for t,f in zip(clean, flags) if not f]
     summary_excl_flagged = extractive_summary(unflagged, n_sentences=summary_sentences)
 
-    # aggregates
     sentiment_counts = {}
     for lab in labels:
         sentiment_counts[lab] = sentiment_counts.get(lab,0) + 1
@@ -169,22 +168,20 @@ def analyze_reviews(reviews: List[str],
         "reviews": per_review
     }
 
-# -------- Compare function --------
+# ---------------- Compare function ----------------
 def compare_reviews(reviews_a: List[str], reviews_b: List[str], n_keywords: int = 6) -> Dict[str,Any]:
     a = analyze_reviews(reviews_a, n_keywords=n_keywords)
     b = analyze_reviews(reviews_b, n_keywords=n_keywords)
-    # per-aspect delta of pos_pct
     deltas = {}
-    for asp in set(list(a["aspect_stats"].keys()) + list(b["aspect_stats"].keys())):
+    for asp in set(a["aspect_stats"].keys()) | set(b["aspect_stats"].keys()):
         ap = a["aspect_stats"].get(asp, {}).get("pos_pct", 0.0)
         bp = b["aspect_stats"].get(asp, {}).get("pos_pct", 0.0)
         deltas[asp] = round(ap - bp, 3)
-    # verdict: top 3 aspects by absolute delta
     sorted_asps = sorted(deltas.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
     verdict = "; ".join([f"{asp}: delta {d:+.3f}" for asp,d in sorted_asps])
     return {"a": a, "b": b, "deltas": deltas, "verdict": verdict}
 
-# -------- Export helper --------
+# ---------------- Export helper ----------------
 def export_to_csv(result: Dict[str,Any], out_path: str = "export_reviews.csv") -> str:
     reviews = result.get("reviews", [])
     if not reviews:
@@ -199,7 +196,7 @@ def export_to_csv(result: Dict[str,Any], out_path: str = "export_reviews.csv") -
             writer.writerow([r.get(k,"") for k in keys])
     return out_path
 
-# -------- Save example JSON (for frontend) --------
+# ---------------- Save example JSON ----------------
 def save_example_json(result: Dict[str,Any], filename: str = "example_output.json") -> str:
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
