@@ -109,38 +109,38 @@ graph LR
 
 BitNBuild-25_DjangOps/ <br>
 ├─ data/ <br>
-├─ ml/
-├─ reviewradar-final/
-├─ venv/
-├─ web/
-│  ├─ __pycache__/
-│  ├─ browser_extension/
-│  │  ├─ content.js
-│  │  ├─ manifest.json
-│  │  ├─ popup.html
-│  │  └─ popup.js
-│  ├─ 2.13.0
-│  ├─ ENHANCED_FEATURES.md
-│  ├─ README.md
-│  ├─ alternative_sites.txt
-│  ├─ backend_api.py
-│  ├─ exact_product_urls.txt
-│  ├─ fix_keras_compatibility.bat
-│  ├─ fix_keras_compatibility.py
-│  ├─ mock_scraper.py
-│  ├─ quick_test_scraper.py
-│  ├─ requirements.txt
-│  ├─ scraper.py
-│  ├─ start_backend.bat
-│  ├─ start_backend.py
-│  ├─ streamlit_app.py
-│  ├─ test_ecommerce_scraper.py
-│  ├─ test_scraper.py
-│  ├─ test_setup.py
-│  ├─ test_urls.txt
-│  ├─ test_working_urls.py
-│  └─ working_product_urls.txt
-├─ .gitignore
+├─ ml/ <br>
+├─ reviewradar-final/ <br>
+├─ venv/ <br>
+├─ web/ <br>
+│  ├─ __pycache__/ <br>
+│  ├─ browser_extension/ <br>
+│  │  ├─ content.js <br>
+│  │  ├─ manifest.json <br>
+│  │  ├─ popup.html <br>
+│  │  └─ popup.js <br>
+│  ├─ 2.13.0 <br>
+│  ├─ ENHANCED_FEATURES.md <br>
+│  ├─ README.md <br>
+│  ├─ alternative_sites.txt <br>
+│  ├─ backend_api.py <br>
+│  ├─ exact_product_urls.txt <br>
+│  ├─ fix_keras_compatibility.bat <br>
+│  ├─ fix_keras_compatibility.py <br>
+│  ├─ mock_scraper.py <br>
+│  ├─ quick_test_scraper.py <br>
+│  ├─ requirements.txt <br>
+│  ├─ scraper.py <br>
+│  ├─ start_backend.bat <br>
+│  ├─ start_backend.py <br>
+│  ├─ streamlit_app.py <br>
+│  ├─ test_ecommerce_scraper.py <br>
+│  ├─ test_scraper.py <br>
+│  ├─ test_setup.py <br>
+│  ├─ test_urls.txt <br>
+│  ├─ test_working_urls.py <br>
+│  └─ working_product_urls.txt <br>
+├─ .gitignore <br>
 └─ README.md  
 
 
