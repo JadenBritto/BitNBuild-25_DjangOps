@@ -1,25 +1,36 @@
-from celery import Celery
+try:
+    from review_radar.celery_app import app
+except ImportError:
+    # Fallback for development without Celery
+    class MockApp:
+        def task(self, func):
+            return func
+    app = MockApp()
+
 from .models import ProductAnalysis, Review
 from .scraper import ReviewScraper
 from .sentiment_analyzer import SentimentAnalyzer
 
-app = Celery('review_radar')
-
 @app.task
 def analyze_product_reviews(analysis_id):
+    scraper = None
     try:
         analysis = ProductAnalysis.objects.get(id=analysis_id)
         analysis.status = 'processing'
         analysis.save()
         
         # Scrape reviews
-        scraper = ReviewScraper()
+        scraper = ReviewScraper(max_reviews=20)  # Set reasonable limit
         reviews_data, product_name = scraper.scrape_reviews(analysis.url)
         
         if not reviews_data:
+            print(f"No reviews found for URL: {analysis.url}")
             analysis.status = 'failed'
+            analysis.error_message = 'No reviews found for this product'
             analysis.save()
             return
+        
+        print(f"Successfully scraped {len(reviews_data)} reviews")
         
         analysis.product_name = product_name
         analysis.total_reviews = len(reviews_data)
@@ -71,7 +82,19 @@ def analyze_product_reviews(analysis_id):
         analysis.status = 'completed'
         analysis.save()
         
+        print(f"Analysis completed successfully for {product_name}")
+        
     except Exception as e:
-        analysis.status = 'failed'
-        analysis.save()
+        try:
+            analysis = ProductAnalysis.objects.get(id=analysis_id)
+            analysis.status = 'failed'
+            analysis.error_message = str(e)
+            analysis.save()
+        except:
+            pass
         print(f"Analysis failed: {e}")
+        
+    finally:
+        # Always close the scraper to free resources
+        if scraper:
+            scraper.close()

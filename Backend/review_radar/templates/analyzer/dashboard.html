@@ -1,0 +1,423 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ analysis.product_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="bg-white rounded-lg card-shadow p-6 mb-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2" id="productName">
+                    {% if analysis.product_name %}{{ analysis.product_name }}{% else %}Loading...{% endif %}
+                </h2>
+                <p class="text-gray-600">{{ analysis.url }}</p>
+                <div class="mt-2">
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold" id="statusBadge">
+                        {% if analysis.status == 'completed' %}
+                            <span class="bg-green-100 text-green-800">Analysis Complete</span>
+                        {% elif analysis.status == 'processing' %}
+                            <span class="bg-yellow-100 text-yellow-800">Processing...</span>
+                        {% elif analysis.status == 'failed' %}
+                            <span class="bg-red-100 text-red-800">Analysis Failed</span>
+                        {% else %}
+                            <span class="bg-gray-100 text-gray-800">Pending</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Started</p>
+                <p class="text-lg font-semibold">{{ analysis.created_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading State -->
+    <div id="loadingState" class="{% if analysis.status == 'completed' %}hidden{% endif %}">
+        <div class="bg-white rounded-lg card-shadow p-8 text-center">
+            <div class="loading-spinner mb-4"></div>
+            <h3 class="text-xl font-semibold mb-2">Analyzing Reviews...</h3>
+            <p class="text-gray-600">This may take a few minutes depending on the number of reviews.</p>
+            <div class="mt-4">
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full animate-pulse" style="width: 45%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results -->
+    <div id="resultsSection" class="{% if analysis.status != 'completed' %}hidden{% endif %}">
+        <!-- Summary Cards -->
+        <div class="grid md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Total Reviews</p>
+                        <p class="text-2xl font-semibold text-gray-900" id="totalReviews">{{ analysis.total_reviews }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Positive</p>
+                        <p class="text-2xl font-semibold text-green-600" id="positiveReviews">{{ analysis.positive_reviews }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M18.364 5.636l-1.414 1.414L15.536 5.636a2 2 0 00-2.828 0L10 8.343 7.293 5.636a2 2 0 00-2.828 0L2.05 7.05a2 2 0 000 2.828L4.464 12.293 2.05 14.707a2 2 0 002.828 2.828L7.293 15.121l2.707 2.707a2 2 0 002.828 0l2.707-2.707 2.414 2.414a2 2 0 002.828-2.828L17.364 12.293l2.414-2.414a2 2 0 00-2.828-2.828L15.536 8.465 18.364 5.636z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Negative</p>
+                        <p class="text-2xl font-semibold text-red-600" id="negativeReviews">{{ analysis.negative_reviews }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V5z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500">Neutral</p>
+                        <p class="text-2xl font-semibold text-gray-600" id="neutralReviews">{{ analysis.neutral_reviews }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts and Keywords -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Sentiment Chart -->
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <h3 class="text-xl font-semibold mb-4">Sentiment Distribution</h3>
+                <div class="relative h-64">
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Keywords Section -->
+            <div class="space-y-6">
+                <!-- Positive Keywords -->
+                <div class="bg-white rounded-lg card-shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-green-600">Top Positive Keywords</h3>
+                    <div id="positiveKeywords" class="space-y-2">
+                        <!-- Keywords will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Negative Keywords -->
+                <div class="bg-white rounded-lg card-shadow p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-red-600">Top Negative Keywords</h3>
+                    <div id="negativeKeywords" class="space-y-2">
+                        <!-- Keywords will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const analysisId = "{{ analysis.id }}";
+let pollInterval;
+
+function updateDashboard(data) {
+    try {
+        if (data.product_name) {
+            const productNameEl = document.getElementById('productName');
+            if (productNameEl) {
+                productNameEl.textContent = data.product_name;
+            }
+        }
+        
+        if (data.status === 'completed') {
+            // Hide loading state
+            const loadingState = document.getElementById('loadingState');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            if (loadingState) loadingState.classList.add('hidden');
+            if (resultsSection) resultsSection.classList.remove('hidden');
+            
+            // Update counts with validation
+            const updateElement = (id, value) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = parseInt(value) || 0;
+                }
+            };
+            
+            updateElement('totalReviews', data.total_reviews);
+            updateElement('positiveReviews', data.positive_reviews);
+            updateElement('negativeReviews', data.negative_reviews);
+            updateElement('neutralReviews', data.neutral_reviews);
+            
+            // Update status badge
+            const statusBadge = document.getElementById('statusBadge');
+            if (statusBadge) {
+                statusBadge.innerHTML = 
+                    '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">Analysis Complete</span>';
+            }
+            
+            // Create sentiment chart with delay to ensure DOM is ready
+            setTimeout(() => {
+                createSentimentChart(data.sentiment_breakdown);
+            }, 100);
+            
+            // Display keywords
+            displayKeywords('positiveKeywords', data.positive_keywords, 'green');
+            displayKeywords('negativeKeywords', data.negative_keywords, 'red');
+            
+            // Stop polling
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        } else if (data.status === 'failed') {
+            const statusBadge = document.getElementById('statusBadge');
+            const loadingState = document.getElementById('loadingState');
+            
+            if (statusBadge) {
+                statusBadge.innerHTML = 
+                    '<span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">Analysis Failed</span>';
+            }
+            
+            if (loadingState) {
+                loadingState.innerHTML = 
+                    '<div class="bg-white rounded-lg card-shadow p-8 text-center"><h3 class="text-xl font-semibold mb-2 text-red-600">Analysis Failed</h3><p class="text-gray-600">Please try again with a different URL.</p></div>';
+            }
+        }
+    } catch (error) {
+        console.error('Error updating dashboard:', error);
+    }
+}
+
+function createSentimentChart(breakdown) {
+    try {
+        const chartCanvas = document.getElementById('sentimentChart');
+        if (!chartCanvas) {
+            console.error('Chart canvas not found');
+            return;
+        }
+        
+        const ctx = chartCanvas.getContext('2d');
+        
+        // Parse breakdown data if it's a string
+        let chartData;
+        if (typeof breakdown === 'string') {
+            try {
+                chartData = JSON.parse(breakdown);
+            } catch (e) {
+                console.error('Error parsing breakdown data:', e);
+                // Fallback to default data
+                chartData = { positive: 0, negative: 0, neutral: 0 };
+            }
+        } else {
+            chartData = breakdown || { positive: 0, negative: 0, neutral: 0 };
+        }
+        
+        // Ensure numeric values
+        const positive = parseInt(chartData.positive) || 0;
+        const negative = parseInt(chartData.negative) || 0;
+        const neutral = parseInt(chartData.neutral) || 0;
+        
+        // Don't create chart if no data
+        if (positive + negative + neutral === 0) {
+            chartCanvas.parentElement.innerHTML = '<p class="text-gray-500 text-center py-8">No sentiment data available</p>';
+            return;
+        }
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Positive', 'Negative', 'Neutral'],
+                datasets: [{
+                    data: [positive, negative, neutral],
+                    backgroundColor: ['#10B981', '#EF4444', '#6B7280'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverBackgroundColor: ['#059669', '#DC2626', '#4B5563'],
+                    hoverBorderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                family: 'system-ui'
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#ffffff',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                const total = positive + negative + neutral;
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.parsed + ' reviews (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
+                cutout: '50%',
+                animation: {
+                    animateRotate: true,
+                    animateScale: false,
+                    duration: 1000
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error creating sentiment chart:', error);
+        const chartContainer = document.getElementById('sentimentChart').parentElement;
+        chartContainer.innerHTML = '<p class="text-red-500 text-center py-8">Error loading chart</p>';
+    }
+}
+
+function displayKeywords(containerId, keywords, color) {
+    try {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Keywords container not found:', containerId);
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        // Parse keywords data if it's a string
+        let keywordData;
+        if (typeof keywords === 'string') {
+            try {
+                keywordData = JSON.parse(keywords);
+            } catch (e) {
+                console.error('Error parsing keywords data:', e);
+                keywordData = [];
+            }
+        } else {
+            keywordData = keywords || [];
+        }
+        
+        // Check if we have valid data
+        if (!Array.isArray(keywordData) || keywordData.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No keywords found</p>';
+            return;
+        }
+        
+        keywordData.slice(0, 8).forEach(keyword => {
+            if (keyword && keyword.word) {
+                const keywordElement = document.createElement('div');
+                keywordElement.className = `flex justify-between items-center p-2 bg-${color}-50 rounded`;
+                const score = keyword.score ? parseFloat(keyword.score).toFixed(2) : 'N/A';
+                keywordElement.innerHTML = `
+                    <span class="font-medium text-${color}-800">${keyword.word}</span>
+                    <span class="text-sm text-${color}-600">${score}</span>
+                `;
+                container.appendChild(keywordElement);
+            }
+        });
+        
+        // If no valid keywords were added
+        if (container.children.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">No valid keywords found</p>';
+        }
+    } catch (error) {
+        console.error('Error displaying keywords:', error);
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading keywords</p>';
+        }
+    }
+}
+
+// Poll for updates if analysis is not complete
+if ("{{ analysis.status }}" !== "completed") {
+    pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/status/${analysisId}/`);
+            const data = await response.json();
+            updateDashboard(data);
+        } catch (error) {
+            console.error('Error polling status:', error);
+        }
+    }, 3000);
+}
+
+// Initial load for completed analysis
+{% if analysis.status == 'completed' %}
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Parse data safely from Django template
+        const analysisData = {
+            status: 'completed',
+            total_reviews: parseInt('{{ analysis.total_reviews|default:0 }}') || 0,
+            positive_reviews: parseInt('{{ analysis.positive_reviews|default:0 }}') || 0,
+            negative_reviews: parseInt('{{ analysis.negative_reviews|default:0 }}') || 0,
+            neutral_reviews: parseInt('{{ analysis.neutral_reviews|default:0 }}') || 0,
+            sentiment_breakdown: `{{ analysis.get_sentiment_breakdown|default:'{"positive":0,"negative":0,"neutral":0}'|escapejs }}`,
+            positive_keywords: `{{ analysis.get_positive_keywords|default:'[]'|escapejs }}`,
+            negative_keywords: `{{ analysis.get_negative_keywords|default:'[]'|escapejs }}`
+        };
+        
+        console.log('Loading initial analysis data:', analysisData);
+        
+        // Wait a bit for DOM to be fully ready
+        setTimeout(() => {
+            updateDashboard(analysisData);
+        }, 50);
+        
+    } catch (error) {
+        console.error('Error loading initial analysis data:', error);
+        // Show error message to user
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection) {
+            resultsSection.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center"><p class="text-red-600">Error loading analysis results. Please refresh the page.</p></div>';
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

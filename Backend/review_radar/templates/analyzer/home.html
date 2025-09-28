@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Radar - Home{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-800 mb-4">
+            Analyze Product Reviews with AI
+        </h2>
+        <p class="text-xl text-gray-600 mb-8">
+            Get instant insights from thousands of customer reviews. Simply paste a product URL and let AI do the work.
+        </p>
+    </div>
+    
+    <!-- URL Input Form -->
+    <div class="bg-white rounded-lg card-shadow p-8 mb-8">
+        <h3 class="text-2xl font-semibold mb-6 text-center">Enter Product URL</h3>
+        <form id="analyzeForm" class="space-y-4">
+            <div>
+                <input 
+                    type="url" 
+                    id="productUrl" 
+                    placeholder="https://www.amazon.com/product-name/dp/XXXXXXXXXX"
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                    required
+                >
+            </div>
+            <button 
+                type="submit" 
+                class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition font-semibold text-lg"
+                id="analyzeBtn"
+            >
+                <span id="btnText">Analyze Reviews</span>
+                <div id="btnLoader" class="hidden loading-spinner"></div>
+            </button>
+        </form>
+        
+        <div id="errorMessage" class="hidden mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        </div>
+        
+        <div id="successMessage" class="hidden mt-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+            Analysis started! Redirecting to dashboard...
+        </div>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div class="bg-white rounded-lg card-shadow p-6 text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h4 class="text-xl font-semibold mb-2">Smart Scraping</h4>
+            <p class="text-gray-600">Automatically extracts reviews from major e-commerce platforms</p>
+        </div>
+        
+        <div class="bg-white rounded-lg card-shadow p-6 text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+            </div>
+            <h4 class="text-xl font-semibold mb-2">AI Analysis</h4>
+            <p class="text-gray-600">Uses advanced sentiment analysis to understand customer opinions</p>
+        </div>
+        
+        <div class="bg-white rounded-lg card-shadow p-6 text-center">
+            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                </svg>
+            </div>
+            <h4 class="text-xl font-semibold mb-2">Visual Dashboard</h4>
+            <p class="text-gray-600">Clear charts and insights to understand review patterns instantly</p>
+        </div>
+    </div>
+    
+    <!-- Supported Platforms -->
+    <div class="bg-white rounded-lg card-shadow p-8 text-center">
+        <h3 class="text-2xl font-semibold mb-6">Supported Platforms</h3>
+        <div class="flex justify-center items-center space-x-8 text-gray-600">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-orange-500">Amazon</div>
+                <p class="text-sm">Product reviews</p>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-blue-500">Flipkart</div>
+                <p class="text-sm">Customer feedback</p>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-500">eBay</div>
+                <p class="text-sm">Buyer reviews</p>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-gray-500">Others</div>
+                <p class="text-sm">Generic support</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('analyzeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const url = document.getElementById('productUrl').value;
+    const btn = document.getElementById('analyzeBtn');
+    const btnText = document.getElementById('btnText');
+    const btnLoader = document.getElementById('btnLoader');
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+    
+    // Reset messages
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    // Show loading state
+    btn.disabled = true;
+    btnText.classList.add('hidden');
+    btnLoader.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/analyze/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            successDiv.classList.remove('hidden');
+            setTimeout(() => {
+                window.location.href = `/dashboard/${data.analysis_id}/`;
+            }, 2000);
+        } else {
+            errorDiv.textContent = data.error || 'An error occurred';
+            errorDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        errorDiv.textContent = 'Failed to start analysis. Please try again.';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        // Reset button state
+        btn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoader.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}

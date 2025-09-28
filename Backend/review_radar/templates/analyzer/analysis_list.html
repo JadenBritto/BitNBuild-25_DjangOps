@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}All Analyses{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-800">Recent Analyses</h2>
+        <a href="{% url 'analyzer:home' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+            New Analysis
+        </a>
+    </div>
+    
+    {% if analyses %}
+        <div class="space-y-4">
+            {% for analysis in analyses %}
+            <div class="bg-white rounded-lg card-shadow p-6">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">
+                            {% if analysis.product_name %}
+                                {{ analysis.product_name }}
+                            {% else %}
+                                Analysis #{{ analysis.id }}
+                            {% endif %}
+                        </h3>
+                        <p class="text-gray-600 mb-2 truncate">{{ analysis.url }}</p>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold
+                                {% if analysis.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif analysis.status == 'processing' %}bg-yellow-100 text-yellow-800
+                                {% elif analysis.status == 'failed' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ analysis.get_status_display }}
+                            </span>
+                            <span class="text-sm text-gray-500">
+                                {{ analysis.created_at|timesince }} ago
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if analysis.status == 'completed' %}
+                    <div class="text-right ml-6">
+                        <div class="text-sm text-gray-500 mb-1">Reviews</div>
+                        <div class="text-2xl font-bold text-gray-800">{{ analysis.total_reviews }}</div>
+                        <div class="flex space-x-2 mt-2">
+                            <span class="text-green-600 text-sm">+{{ analysis.positive_reviews }}</span>
+                            <span class="text-red-600 text-sm">-{{ analysis.negative_reviews }}</span>
+                            <span class="text-gray-600 text-sm">~{{ analysis.neutral_reviews }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="ml-6">
+                        <a href="{% url 'analyzer:dashboard' analysis.id %}" 
+                           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                            View Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No analyses yet</h3>
+            <p class="text-gray-600 mb-4">Start your first product review analysis</p>
+            <a href="{% url 'analyzer:home' %}" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                Analyze Product
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
