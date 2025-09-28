@@ -107,23 +107,42 @@ graph LR
 ## 📁 Project Structure
 
 
-review-radar/
-│
-├── app.py                 # Main Streamlit application
-├── models/
-│   ├── sentiment_model.py # Sentiment analysis model
-│   └── trained_model.pkl  # Pre-trained model file
-├── scrapers/
-│   ├── __init__.py
-│   ├── amazon_scraper.py  # Amazon-specific scraper
-│   └── generic_scraper.py # Generic scraper
-├── utils/
-│   ├── __init__.py
-│   ├── text_processing.py # Text preprocessing utilities
-│   └── keyword_extraction.py # Keyword extraction logic
-├── requirements.txt       # Python dependencies
-├── README.md             # This file
-└── assets/               # Images and other assets
+BitNBuild-25_DjangOps/
+├─ data/
+├─ ml/
+├─ reviewradar-final/
+├─ venv/
+├─ web/
+│  ├─ __pycache__/
+│  ├─ browser_extension/
+│  │  ├─ content.js
+│  │  ├─ manifest.json
+│  │  ├─ popup.html
+│  │  └─ popup.js
+│  ├─ 2.13.0
+│  ├─ ENHANCED_FEATURES.md
+│  ├─ README.md
+│  ├─ alternative_sites.txt
+│  ├─ backend_api.py
+│  ├─ exact_product_urls.txt
+│  ├─ fix_keras_compatibility.bat
+│  ├─ fix_keras_compatibility.py
+│  ├─ mock_scraper.py
+│  ├─ quick_test_scraper.py
+│  ├─ requirements.txt
+│  ├─ scraper.py
+│  ├─ start_backend.bat
+│  ├─ start_backend.py
+│  ├─ streamlit_app.py
+│  ├─ test_ecommerce_scraper.py
+│  ├─ test_scraper.py
+│  ├─ test_setup.py
+│  ├─ test_urls.txt
+│  ├─ test_working_urls.py
+│  └─ working_product_urls.txt
+├─ .gitignore
+└─ README.md
+
 
 ## 🔧 Technical Details
 
