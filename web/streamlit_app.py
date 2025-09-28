@@ -1,6 +1,6 @@
 # web/streamlit_app.py
 import streamlit as st
-import requests
+import requests 
 import json
 import pandas as pd
 import io
