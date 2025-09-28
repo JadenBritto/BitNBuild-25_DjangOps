@@ -106,7 +106,7 @@ graph LR
 
 ## 📁 Project Structure
 
-
+#
 BitNBuild-25_DjangOps/
 ├─ data/
 ├─ ml/
@@ -141,7 +141,7 @@ BitNBuild-25_DjangOps/
 │  ├─ test_working_urls.py
 │  └─ working_product_urls.txt
 ├─ .gitignore
-└─ README.md
+└─ README.md  #
 
 
 ## 🔧 Technical Details
