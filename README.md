@@ -106,9 +106,9 @@ graph LR
 
 ## 📁 Project Structure
 
-<br>
-BitNBuild-25_DjangOps/
-├─ data/
+
+BitNBuild-25_DjangOps/ <br>
+├─ data/ <br>
 ├─ ml/
 ├─ reviewradar-final/
 ├─ venv/
