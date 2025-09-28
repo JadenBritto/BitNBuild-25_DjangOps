@@ -61,7 +61,7 @@ graph LR
 
 1. **Clone the repository**
    
-  [ git clone https://github.com/yourusername/review-radar.git](https://github.com/JadenBritto/BitNBuild-25_DjangOps)
+  [Github Repo](https://github.com/JadenBritto/BitNBuild-25_DjangOps)
    cd review-radar
    
 
