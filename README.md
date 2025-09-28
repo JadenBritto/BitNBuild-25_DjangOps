@@ -61,7 +61,7 @@ graph LR
 
 1. **Clone the repository**
    
-  [Github Repo](https://github.com/JadenBritto/BitNBuild-25_DjangOps)
+   [Github Repo](https://github.com/JadenBritto/BitNBuild-25_DjangOps)
   
    cd review-radar
    
@@ -105,6 +105,7 @@ graph LR
 - And more...
 
 ## 📁 Project Structure
+
 
 review-radar/
 │
