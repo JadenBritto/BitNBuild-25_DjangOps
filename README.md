@@ -229,7 +229,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Hugging Face](https://huggingface.co/) for pre-trained models
+
 - [Streamlit](https://streamlit.io/) for the amazing web framework
 - [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/) for web scraping capabilities
 - Open source community for various libraries and tools
